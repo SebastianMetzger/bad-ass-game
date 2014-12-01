@@ -1,4 +1,7 @@
 (function() {
+	var VILLAIN_VELOCITY = 1;
+	var HERO_VELOCITY = 2;
+
 	var actors = [];
 
 	var hero = {
@@ -32,32 +35,35 @@
 	}
 
 	//main game loop
-	var stream = Rx.Observable.interval(100);
+	var stream = Rx.Observable.interval(33);
 
 	//handle keyboard input
 	var keyDowns = Rx.Observable.fromEvent(document, 'keydown');
 	var keyUps = Rx.Observable.fromEvent(document, 'keyup');
 
-	keyDowns.merge(keyUps).select(function(x) {
+	keyDowns.select(function(x) {
 		return x.keyCode;
-	}).distinctUntilChanged().subscribe(function(kc) {
+	}).subscribe(function(kc) {
 		console.log(kc);
 		//left
 		if (kc === 37) {
-			hero.vx = Math.max(hero.x - 10, 0);
+			hero.vx = Math.max(hero.vx - HERO_VELOCITY, -20);
 			//up
 		}
 		if (kc === 38) {
-			hero.vy = Math.max(hero.y - 10, 0);
+			hero.vy = Math.max(hero.vy - HERO_VELOCITY, -20);
 			//right
 		}
 		if (kc === 39) {
-			hero.vx = Math.min(hero.x + 10, document.body.clientWidth);
+			hero.vx = Math.min(hero.vx + HERO_VELOCITY, 20);
 			//down
 		}
 		if (kc === 40) {
-			hero.vy = Math.min(hero.y + 10, document.body.clientHeight);
+			hero.vy = Math.min(hero.vy + HERO_VELOCITY, 20);
 		}
+	});
+
+	stream.subscribe(function(){
 		render();
 	});
 
@@ -65,16 +71,16 @@
 		villains.forEach(function(villain) {
 			var direction = getRandomInt(0, 3);
 			if (direction === 0) {
-				villain.vx = -10;
+				villain.vx = -VILLAIN_VELOCITY;
 				//up
 			} else if (direction === 1) {
-				villain.vy = -10;
+				villain.vy = -VILLAIN_VELOCITY;
 				//right
 			} else if (direction === 2) {
-				villain.vx = 10
+				villain.vx = VILLAIN_VELOCITY
 				//down
 			} else if (direction === 3) {
-				villain.vy = 10;
+				villain.vy = VILLAIN_VELOCITY;
 			}
 		});
 		render();
@@ -84,8 +90,11 @@
 
 	function render() {
 		actors.forEach(function(actor) {
-			actor.domElement.style.left = (actor.x + actor.vx) + "px";
-			actor.domElement.style.top = (actor.y + actor.yx) + "px";
+			actor.x = Math.min(Math.max(actor.x + actor.vx, 0), document.body.clientWidth - 40);
+			actor.y = Math.min(Math.max(actor.y + actor.vy, 0), document.body.clientHeight - 40);
+
+			actor.domElement.style.left = (actor.x) + "px";
+			actor.domElement.style.top = (actor.y) + "px";
 		});
 	}
 
